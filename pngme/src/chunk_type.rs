@@ -1,36 +1,44 @@
+use crate::{Error, Result};
 use core::fmt;
 use std::str::from_utf8;
 
-#[derive(Debug, PartialEq, Eq)]
-struct ChunkType {
+///! only a-z or A-Z
+fn is_valid_char(con: &[u8]) -> bool {
+    for u in con.iter() {
+        if !u8::is_ascii_uppercase(u) && !u8::is_ascii_lowercase(u) {
+            return false;
+        }
+    }
+    true
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChunkType {
     code: [u8; 4],
 }
 
 impl ChunkType {
-    fn bytes(&self) -> [u8; 4] {
-        self.code.clone()
+    pub fn bytes(&self) -> [u8; 4] {
+        //copy
+        self.code
     }
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         if !self.is_reserved_bit_valid() {
             return false;
         }
-        for u in self.code.iter() {
-            if !u8::is_ascii_uppercase(u) && !u8::is_ascii_lowercase(u) {
-                return false;
-            }
-        }
-        true
+        is_valid_char(&self.code)
     }
-    fn is_critical(&self) -> bool {
+
+    pub fn is_critical(&self) -> bool {
         self.code[0] & 1 << 5 == 0
     }
-    fn is_public(&self) -> bool {
+    pub fn is_public(&self) -> bool {
         self.code[1] & 1 << 5 == 0
     }
-    fn is_reserved_bit_valid(&self) -> bool {
+    pub fn is_reserved_bit_valid(&self) -> bool {
         self.code[2] & 1 << 5 == 0
     }
-    fn is_safe_to_copy(&self) -> bool {
+    pub fn is_safe_to_copy(&self) -> bool {
         self.code[3] & 1 << 5 != 0
     }
 }
@@ -42,17 +50,15 @@ impl fmt::Display for ChunkType {
 }
 
 impl std::str::FromStr for ChunkType {
-    type Err = &'static str;
+    type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let s = s.as_bytes();
         if s.len() != 4 {
-            Err("str len is not 4")
+            Err("str len is not 4".into())
         } else {
-            for u in s {
-                if !u8::is_ascii_lowercase(u) && !u8::is_ascii_uppercase(u) {
-                   return Err("str char not valid") 
-                }
+            if !is_valid_char(s) {
+                return Err("str char not valid".into());
             }
             let mut x = [0; 4];
             for i in 0..x.len() {
@@ -65,14 +71,13 @@ impl std::str::FromStr for ChunkType {
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = &'static str;
-
-    fn try_from(value: [u8; 4]) -> Result<Self, Self::Error> {
+    type Error = Error;
+    fn try_from(value: [u8; 4]) -> Result<Self> {
         let ct = Self { code: value };
         if ct.is_valid() {
             Ok(ct)
         } else {
-            Err("val in not valid")
+            Err("val in not valid".into())
         }
     }
 }
