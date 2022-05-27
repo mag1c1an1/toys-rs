@@ -33,7 +33,8 @@ impl Png {
 
     /// Creates a `Png` from a file path
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        todo!()
+        let file = fs::read(path)?;
+        Ok(Png::try_from(file.as_ref())?)
     }
 
     /// Appends a chunk to the end of this `Png` file's `Chunk` list.
