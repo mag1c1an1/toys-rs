@@ -1,20 +1,40 @@
-use std::fmt::{self, write};
+use std::vec;
 
-/// This enum can be used to represent whether a file is read-only, write-only, or read/write. An
-/// enum is basically a value that can be one of some number of "things".
-#[allow(unused)]
-pub enum AccessMode {
-    Read,
-    Write,
-    ReadWrite,
+use crate::open_file::OpenFile;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Process {
+    pub pid: usize,
+    pub ppid: usize,
+    pub command: String,
 }
 
-impl fmt::Display for AccessMode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-       match self {
-           AccessMode::Read => write!(f, "read"),
-           AccessMode::Write => write!(f,"write"),
-           AccessMode::ReadWrite => write!(f,"read/write"),
-       } 
+impl Process {
+    #[allow(unused)]
+    pub fn new(pid: usize, ppid: usize, command: String) -> Self {
+        Self { pid, ppid, command }
+    }
+
+    /// This function returns a list of file descriptor numbers for this Process, if that
+    /// information is available (it will return None if the information is unavailable). The
+    /// information will commonly be unavailable if the process has exited. (Zombie processes
+    /// still have a pid, but their resources have already been freed, including the file
+    /// descriptor table.)
+    #[allow(unused)]
+    pub fn list_fds(&self) -> Option<Vec<usize>> {
+        unimplemented!()
+    }
+
+    /// This function returns a list of (fdnumber, OpenFile) tuples, if file descriptor
+    /// information is available (it returns None otherwise). The information is commonly
+    /// unavailable if the process has already exited.
+
+    #[allow(unused)]
+    pub fn list_open_files(&self) -> Option<Vec<(usize, OpenFile)>> {
+        let mut open_files = vec![];
+        for fd in self.list_fds()? {
+            open_files.push((fd,OpenFile::from_fd(self.pid, fd)?));
+        }
+        Some(open_files)
     }
 }
