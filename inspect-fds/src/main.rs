@@ -14,15 +14,20 @@ fn main() {
     }
     #[allow(unused)]
     let target = &args[1];
-    let t = get_target(target).expect("Error in calling ps or pgrep");
-    if t.is_none() {
-        println!(
-            r#"Target "{}" did not match any running PIDs or executables "#,
-            target
-        );
-        std::process::exit(1);
+    let goal = get_target(target).expect("Error in calling ps or pgrep");
+    match goal {
+        Some(proc) => {
+            proc.print();
+            for child in ps_utils::get_child_processes(proc.pid).expect("faild to get child processes").iter() {
+                println!();
+                child.print();
+            }
+        },
+        None => {
+            println!("Target {} did not match any running PIDS or executables",target);
+            std::process::exit(1);
+        }
     }
-    println!("Found pid {}", t.unwrap().pid);
 }
 #[cfg(test)]
 mod test {

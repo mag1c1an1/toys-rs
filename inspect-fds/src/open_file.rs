@@ -1,22 +1,22 @@
 use regex::Regex;
-use std::{fmt, collections::hash_map::DefaultHasher, hash::{Hasher, Hash}};
+use std::{fmt, collections::hash_map::DefaultHasher, hash::{Hasher, Hash}, fs};
 
 const O_WRONLY: usize = 0000_0001;
 const O_RDWR: usize = 0000_0002;
+
 const COLORS: [&str; 6] = [
-    "\x18[38;5;9m",
-    "\x18[38;5;10m",
-    "\x18[38;5;11m",
-    "\x18[38;5;12m",
-    "\x18[38;5;13m",
-    "\x18[38;5;14m",
+    "\x1B[38;5;9m",
+    "\x1B[38;5;10m",
+    "\x1B[38;5;11m",
+    "\x1B[38;5;12m",
+    "\x1B[38;5;13m",
+    "\x1B[38;5;14m",
 ];
-
-
-const CLEAR_COLOR:&str = "\x1B[0m";
+const CLEAR_COLOR: &str = "\x1B[0m";
 /// This enum can be used to represent whether a file is read-only, write-only, or read/write. An
 /// enum is basically a value that can be one of some number of "things".
 #[allow(unused)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AccessMode {
     Read,
     Write,
@@ -34,6 +34,7 @@ impl fmt::Display for AccessMode {
 }
 
 /// Stores information about open file on the system.
+#[derive(Debug, Clone, PartialEq)]
 pub struct OpenFile {
     pub name: String,
     pub cursor: usize,
@@ -113,10 +114,15 @@ impl OpenFile {
     /// program and we don't need to do fine-grained error handling, so returning Option is a
     /// simple way to indicate that "hey, we weren't able to get the necessary information"
     /// without making a big deal of it.)
-
     #[allow(unused)]
     pub fn from_fd(pid: usize, fd: usize) -> Option<OpenFile> {
-        unimplemented!()
+        let fd_path = format!("/proc/{}/fd/{}", pid, fd);
+        let name = OpenFile::path_to_name(fs::read_link(fd_path).ok()?.to_str()?);
+        let content_path = format!("/proc/{}/fdinfo/{}", pid, fd);
+        let content = fs::read_to_string(content_path).ok()?;
+        let cursor = OpenFile::parse_cursor(&content)?;
+        let access_mode = OpenFile::parse_access_mode(&content)?;
+        Some(OpenFile::new(name, cursor, access_mode))
     }
 
     /// This function returns the OpenFile's name with ANSI escape codes included to colorize
@@ -125,15 +131,58 @@ impl OpenFile {
     /// quickly see all the fds that point to a particular pipe.
     #[allow(unused)]
     pub fn colorized_name(&self) -> String {
-        if self.name.starts_with("pipe")
+        if self.name.starts_with("<pipe")
         {
             let mut hash = DefaultHasher::new();
             self.name.hash(&mut hash);
             let hash_val = hash.finish();
             let color = COLORS[(hash_val % COLORS.len() as u64) as usize];
-            format!("{}{}{}",color, self.name,CLEAR_COLOR)
-        }else {
+            format!("{}{}{}", color, self.name, CLEAR_COLOR)
+        } else {
             self.name.to_owned()
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::ps_utils;
+    use std::process::{Child, Command};
+
+    fn start_c_program(program: &str) -> Child {
+        Command::new(program)
+            .spawn()
+            .expect(&format!("Could not find {}. Have you run make?", program))
+    }
+
+    #[test]
+    fn test_openfile_from_fd() {
+        let mut test_subprocess = start_c_program("./multi_pipe_test");
+        let process = ps_utils::get_target("multi_pipe_test").unwrap().unwrap();
+        // Get file descriptor 0, which should point to the terminal
+        let open_file = OpenFile::from_fd(process.pid, 0)
+            .expect("Expected to get open file data for multi_pipe_test, but OpenFile::from_fd returned None");
+        assert_eq!(open_file.name, "<terminal>");
+        assert_eq!(open_file.cursor, 0);
+        assert_eq!(open_file.access_mode, AccessMode::ReadWrite);
+        let _ = test_subprocess.kill();
+    }
+
+    #[test]
+    fn test_openfile_from_fd_invalid_fd() {
+        let mut test_subprocess = start_c_program("./multi_pipe_test");
+        let process = ps_utils::get_target("multi_pipe_test").unwrap().unwrap();
+        // Get file descriptor 30, which should be invalid
+        assert!(
+            OpenFile::from_fd(process.pid, 30).is_none(),
+            "Expected None because file descriptor 30 is invalid"
+        );
+        let _ = test_subprocess.kill();
+    }
+    #[test]
+    fn test_colorized_name() {
+        let of = OpenFile::new("<pipe #test>".to_owned(), 0, AccessMode::ReadWrite);
+        assert_eq!("",of.colorized_name())
     }
 }
