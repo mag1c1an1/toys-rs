@@ -8,6 +8,6 @@ edition = "2021"
 [features]
 
 [workspace]
-members = ["pngme","rdiff","inspect-fds"]
+members = ["pngme","rdiff","inspect-fds","linked_list"]
 
 [dependencies]
