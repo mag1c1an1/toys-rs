@@ -195,3 +195,21 @@ mod test {
         let _ = test_subprocess.kill();
     }
 }
+
+    #[test]
+    fn test_openfile_from_fd_invalid_fd() {
+        let mut test_subprocess = start_c_program("./multi_pipe_test");
+        let process = ps_utils::get_target("multi_pipe_test").unwrap().unwrap();
+        // Get file descriptor 30, which should be invalid
+        assert!(
+            OpenFile::from_fd(process.pid, 30).is_none(),
+            "Expected None because file descriptor 30 is invalid"
+        );
+        let _ = test_subprocess.kill();
+    }
+    #[test]
+    fn test_colorized_name() {
+        let of = OpenFile::new("<pipe #test>".to_owned(), 0, AccessMode::ReadWrite);
+        assert_eq!("",of.colorized_name())
+    }
+}
