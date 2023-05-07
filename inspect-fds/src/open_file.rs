@@ -212,4 +212,3 @@ mod test {
         let of = OpenFile::new("<pipe #test>".to_owned(), 0, AccessMode::ReadWrite);
         assert_eq!("",of.colorized_name())
     }
-}
