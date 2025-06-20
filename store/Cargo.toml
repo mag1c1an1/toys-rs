@@ -1,0 +1,8 @@
+[package]
+name = "store"
+edition = "2024"
+version.workspace = true
+authors.workspace = true
+exclude.workspace = true
+
+[dependencies]
