@@ -1,7 +1,10 @@
 [workspace]
 name = "toys-rs"
-resolver = "2"
+resolver = "3"
 members = ["pngme", "rdiff", "inspect-fds", "play", "linked_list", "store"]
+exclude = ["exercise"]
+
+
 [workspace.package]
 version = "0.0.1"
 authors = ["mag1c1an1"]
