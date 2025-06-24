@@ -1,20 +1,19 @@
 #![allow(dead_code)]
 
-use std::{pin::Pin, sync::Arc};
+use std::{sync::Arc, time::Instant};
 
 use arrow::{array::RecordBatch, datatypes::Schema};
-use futures::{Stream, StreamExt, join};
+use futures::{Stream, StreamExt};
 use tokio::{
-    sync::mpsc::{self, Receiver, UnboundedReceiver, unbounded_channel},
-    task::{JoinHandle, JoinSet},
+    sync::mpsc::{Receiver, UnboundedReceiver},
+    task::JoinSet,
 };
 use tpchgen::generators::LineItemGenerator;
 use tpchgen_arrow::{LineItemArrow, RecordBatchIterator};
 use tracing::debug;
 
-use crate::{
-    demux::row_count_demuxer,
-    stream::{RecordBatchReceiverStream, RecordBatchStreamAdapter, SendableRecordBatchStream},
+use crate::stream::{
+    RecordBatchReceiverStream, RecordBatchStreamAdapter, SendableRecordBatchStream,
 };
 
 mod coalesce;
@@ -85,11 +84,16 @@ fn main() {
     tracing_subscriber::fmt::init();
     debug!("speed up start");
     let rt = tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(16)
         .enable_all()
+        .worker_threads(16)
         .build()
         .unwrap();
-    rt.block_on(flow2())
+    rt.block_on(async {
+        let time = Instant::now();
+        flow2().await;
+        let elap = time.elapsed().as_secs_f64();
+        println!("Elapsed {elap} seconds");
+    });
 }
 
 async fn csv_sink(part: usize, mut stream: impl Stream<Item = RecordBatch> + Unpin) {

@@ -61,7 +61,7 @@ impl<O: Send + 'static> ReceiverStreamBuilder<O> {
     /// retrieved from `Self::tx`.
     pub fn spawn_blocking<F>(&mut self, f: F)
     where
-        F: FnOnce() -> (),
+        F: FnOnce(),
         F: Send + 'static,
     {
         self.join_set.spawn_blocking(f);
@@ -82,10 +82,10 @@ impl<O: Send + 'static> ReceiverStreamBuilder<O> {
         let check = async move {
             while let Some(res) = join_set.join_next().await {
                 match res {
-                    Ok(task_res) => {
+                    Ok(_task_res) => {
                         continue;
                     }
-                    Err(e) => {}
+                    Err(_e) => {}
                 }
             }
             None

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use arrow::array::RecordBatch;
-use futures::{Stream, StreamExt};
+use futures::StreamExt;
 use rand::distr::SampleString;
 use tokio::{
     sync::mpsc::{self, Receiver, Sender, UnboundedReceiver, UnboundedSender},
@@ -51,7 +51,7 @@ pub async fn row_count_demuxer(
         debug!("receive rb");
         if open_file_streams.len() < minimum_parallel_files {
             open_file_streams.push(create_new_file_stream(
-                &base_output_path,
+                base_output_path,
                 &write_id,
                 part_idx,
                 &file_extension,
@@ -65,7 +65,7 @@ pub async fn row_count_demuxer(
             // 当当前文件流写入的行数达到 max_rows_per_file 时，关闭并替换为新的文件流。
             row_counts[next_send_steam] = 0;
             open_file_streams[next_send_steam] = create_new_file_stream(
-                &base_output_path,
+                base_output_path,
                 &write_id,
                 part_idx,
                 &file_extension,
