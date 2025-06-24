@@ -2,20 +2,35 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use std::pin::Pin;
-
 use arrow::array::RecordBatch;
 use futures::{Stream, StreamExt};
 use rand::distr::SampleString;
-use tokio::sync::mpsc::{self, Receiver, Sender, UnboundedReceiver, UnboundedSender};
+use tokio::{
+    sync::mpsc::{self, Receiver, Sender, UnboundedReceiver, UnboundedSender},
+    task::JoinHandle,
+};
+use tracing::debug;
+
+use crate::stream::SendableRecordBatchStream;
 
 type RecordBatchReceiver = Receiver<RecordBatch>;
 pub type DemuxedStreamReceiver = UnboundedReceiver<(String, RecordBatchReceiver)>;
 
+pub fn start_demux_task(
+    s: SendableRecordBatchStream,
+) -> (
+    JoinHandle<()>,
+    UnboundedReceiver<(String, RecordBatchReceiver)>,
+) {
+    let (tx, rx) = mpsc::unbounded_channel();
+    let task = tokio::spawn(async move { row_count_demuxer("./", tx, s).await });
+    (task, rx)
+}
+
 pub async fn row_count_demuxer(
     base_output_path: &str,
     mut tx: UnboundedSender<(String, Receiver<RecordBatch>)>,
-    mut input: Pin<Box<impl Stream<Item = RecordBatch> + Send>>,
+    mut input: SendableRecordBatchStream,
 ) {
     let max_rows_per_file = 50000000;
     let max_buffered_batches = 2;
@@ -33,6 +48,7 @@ pub async fn row_count_demuxer(
 
     while let Some(rb) = input.next().await {
         // ensure we have at least minimum_parallel_files open
+        debug!("receive rb");
         if open_file_streams.len() < minimum_parallel_files {
             open_file_streams.push(create_new_file_stream(
                 &base_output_path,

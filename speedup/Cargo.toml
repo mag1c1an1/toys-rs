@@ -6,6 +6,7 @@ authors.workspace = true
 exclude.workspace = true
 
 [dependencies]
+tracing-subscriber = { version = "0.3", features = ["default", "env-filter"] }
 tokio = { version = "1", features = ["full"] }
 tpchgen-arrow = { version = "1.1" }
 tpchgen = { version = "1.1" }
@@ -14,3 +15,5 @@ arrow = "54.3.0"
 object_store = "0.12"
 rand = "0.9"
 async-stream = "0.3"
+tracing = "0.1"
+pin-project-lite = "0.2"
