@@ -4,11 +4,13 @@
 
 use std::fmt::Debug;
 
+use crate::scalar::{Scalar, ScalarRef};
+
 use super::iterator::ArrayIterator;
 use super::{Array, ArrayBuilder};
 use bitvec::prelude::BitVec;
 
-pub trait PrimitiveType: Copy + Send + Sync + Default + Debug + 'static {}
+pub trait PrimitiveType: Scalar + Default {}
 
 impl PrimitiveType for i32 {}
 impl PrimitiveType for f32 {}
@@ -21,9 +23,15 @@ pub struct PrimitiveArray<T: PrimitiveType> {
     bitmap: BitVec,
 }
 
-impl<T: PrimitiveType> Array for PrimitiveArray<T> {
+impl<T> Array for PrimitiveArray<T>
+where
+    T: PrimitiveType + Scalar<ArrayType = Self>,
+    for<'a> T: ScalarRef<'a, ScalarType = T, ArrayType = Self>,
+    for<'a> T: Scalar<RefType<'a> = T>,
+{
     type Builder = PrimitiveArrayBuilder<T>;
     type RefItem<'a> = T;
+    type OwnedItem = T;
 
     fn get(&self, idx: usize) -> Option<Self::RefItem<'_>> {
         if self.bitmap[idx] {
@@ -47,7 +55,13 @@ pub struct PrimitiveArrayBuilder<T: PrimitiveType> {
     bitmap: BitVec,
 }
 
-impl<T: PrimitiveType> ArrayBuilder for PrimitiveArrayBuilder<T> {
+impl<T> ArrayBuilder for PrimitiveArrayBuilder<T>
+where
+    T: PrimitiveType,
+    T: Scalar<ArrayType = PrimitiveArray<T>>,
+    for<'a> T: ScalarRef<'a, ScalarType = T, ArrayType = PrimitiveArray<T>>,
+    for<'a> T: Scalar<RefType<'a> = T>,
+{
     type A = PrimitiveArray<T>;
 
     fn with_capacity(capacity: usize) -> Self {

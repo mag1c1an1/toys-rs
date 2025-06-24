@@ -1,7 +1,7 @@
 [workspace]
 name = "toys-rs"
 resolver = "3"
-members = ["pngme", "rdiff", "inspect-fds", "play", "linked_list", "store"]
+members = ["pngme", "rdiff", "inspect-fds", "play", "linked_list", "store", "speedup"]
 exclude = ["exercise"]
 
 

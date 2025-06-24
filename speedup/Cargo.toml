@@ -1,0 +1,13 @@
+[package]
+name = "speedup"
+edition = "2024"
+version.workspace = true
+authors.workspace = true
+exclude.workspace = true
+
+[dependencies]
+tokio = { version = "1",features = ["full"] }
+tpchgen-arrow = { version = "1.1" }
+tpchgen= { version = "1.1" }
+futures-lite = { version = "2.6" }
+arrow = "54.3.0"

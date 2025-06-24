@@ -4,7 +4,10 @@
 
 use std::fmt::Debug;
 
-use crate::array::iterator::ArrayIterator;
+use crate::{
+    array::iterator::ArrayIterator,
+    scalar::{Scalar, ScalarRef},
+};
 mod iterator;
 
 mod primitive_array;
@@ -13,9 +16,14 @@ pub use primitive_array::{F32Array, I32Array};
 mod string_array;
 pub use string_array::StringArray;
 
-pub trait Array: Sized + 'static {
-    type RefItem<'a>: Copy + Debug;
+pub trait Array: Sized + 'static
+where
+    for<'a> Self::OwnedItem: Scalar<RefType<'a> = Self::RefItem<'a>>,
+{
+    type RefItem<'a>: ScalarRef<'a, ScalarType = Self::OwnedItem, ArrayType = Self>;
     type Builder: ArrayBuilder<A = Self>;
+    type OwnedItem: Scalar<ArrayType = Self>;
+
     fn get(&self, idx: usize) -> Option<Self::RefItem<'_>>;
     fn len(&self) -> usize;
     fn iter(&self) -> ArrayIterator<Self>;

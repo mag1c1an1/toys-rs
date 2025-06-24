@@ -17,6 +17,7 @@ pub struct StringArray {
 impl Array for StringArray {
     type RefItem<'a> = &'a str;
     type Builder = StringArrayBuilder;
+    type OwnedItem = String;
 
     fn get(&self, idx: usize) -> Option<Self::RefItem<'_>> {
         if self.bitmap[idx] {
