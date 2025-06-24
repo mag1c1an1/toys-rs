@@ -6,8 +6,11 @@ authors.workspace = true
 exclude.workspace = true
 
 [dependencies]
-tokio = { version = "1",features = ["full"] }
+tokio = { version = "1", features = ["full"] }
 tpchgen-arrow = { version = "1.1" }
-tpchgen= { version = "1.1" }
-futures-lite = { version = "2.6" }
+tpchgen = { version = "1.1" }
+futures = "0.3"
 arrow = "54.3.0"
+object_store = "0.12"
+rand = "0.9"
+async-stream = "0.3"
