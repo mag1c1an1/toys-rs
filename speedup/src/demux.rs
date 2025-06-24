@@ -2,16 +2,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
+};
+
 use arrow::array::RecordBatch;
 use futures::StreamExt;
 use rand::distr::SampleString;
 use tokio::{
+    io::BufWriter,
     sync::mpsc::{self, Receiver, Sender, UnboundedReceiver, UnboundedSender},
-    task::JoinHandle,
+    task::{JoinHandle, JoinSet},
 };
 use tracing::debug;
 
-use crate::stream::SendableRecordBatchStream;
+use crate::{sink::CsvSink, stream::SendableRecordBatchStream};
 
 type RecordBatchReceiver = Receiver<RecordBatch>;
 pub type DemuxedStreamReceiver = UnboundedReceiver<(String, RecordBatchReceiver)>;
@@ -104,4 +110,35 @@ fn create_new_file_stream(
     let (tx_file, rx_file) = mpsc::channel(max_buffered_batches / 2);
     tx.send((file_path, rx_file)).unwrap();
     tx_file
+}
+
+pub async fn demux(s: SendableRecordBatchStream) {
+    let (task, file_stream_rx) = start_demux_task(s);
+
+    let f1 = async { task.await.unwrap() };
+
+    let (_r1, _r2) = futures::join!(f1, write_files(file_stream_rx));
+}
+
+async fn write_files(mut file_stream_rx: UnboundedReceiver<(String, Receiver<RecordBatch>)>) {
+    let mut join_set = JoinSet::new();
+    let num = Arc::new(AtomicUsize::new(0));
+    while let Some((_location, mut rb_stream)) = file_stream_rx.recv().await {
+        let nc = num.clone();
+        join_set.spawn(async move {
+            // let file = tokio::fs::File::create_new(location).await.unwrap();
+            // let bw = BufWriter::with_capacity(1024 * 1024 * 4, file);
+            // let mut w = CsvSink::new(bw);
+            // while let Some(rb) = rb_stream.recv().await {
+            //     w.write(&rb).await;
+            // }
+            while let Some(rb) = rb_stream.recv().await {
+                nc.fetch_add(rb.num_rows(), Ordering::Relaxed);
+            }
+        });
+    }
+
+    debug!("after row count");
+    join_set.join_all().await;
+    println!("{} Rows Total", num.load(Ordering::Relaxed));
 }
