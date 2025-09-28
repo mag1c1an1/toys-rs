@@ -1,0 +1,2 @@
+get_data:
+    wget http://host.orb.internal:9000/lakesoul-test-bucket/lakesoul/e2e/data/part-97bda835-090c-4426-9bcf-469bcc188dbc-task-0-file-0 -O data/data.parquet
