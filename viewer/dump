@@ -1,0 +1,2607 @@
+#![feature(prelude_import)]
+#[prelude_import]
+use std::prelude::rust_2024::*;
+#[macro_use]
+extern crate std;
+use std::sync::OnceLock;
+use graphql_client::GraphQLQuery;
+use graphql_client::reqwest::post_graphql_blocking;
+use prettytable::row;
+use reqwest::blocking::Client;
+use snafu::{ResultExt, Whatever, whatever};
+static GH_TOKEN: OnceLock<String> = OnceLock::new();
+type URI = String;
+#[graphql(
+    schema_path = "gh_graphql/schema.docs.graphql",
+    query_path = "gh_graphql/search_pr.graphql",
+    response_derives = "Debug,Serialize,Deserialize"
+)]
+struct RepoView;
+mod repo_view {
+    #![allow(dead_code)]
+    use std::result::Result;
+    pub const OPERATION_NAME: &str = "RepoView";
+    pub const QUERY: &str = "query RepoView($owner: String!, $name: String!) {\n  repository(owner: $owner, name: $name) {\n    homepageUrl\n    stargazers {\n      totalCount\n    }\n    issues(first: 20, states: OPEN) {\n      nodes {\n        title\n        comments {\n          totalCount\n        }\n      }\n    }\n    pullRequests(first: 20, states: OPEN) {\n      nodes {\n        title\n        commits {\n          totalCount\n        }\n      }\n    }\n  }\n}";
+    const __QUERY_WORKAROUND: &str = "query RepoView($owner: String!, $name: String!) {\n  repository(owner: $owner, name: $name) {\n    homepageUrl\n    stargazers {\n      totalCount\n    }\n    issues(first: 20, states: OPEN) {\n      nodes {\n        title\n        comments {\n          totalCount\n        }\n      }\n    }\n    pullRequests(first: 20, states: OPEN) {\n      nodes {\n        title\n        commits {\n          totalCount\n        }\n      }\n    }\n  }\n}";
+    use serde::{Serialize, Deserialize};
+    use super::*;
+    #[allow(dead_code)]
+    type Boolean = bool;
+    #[allow(dead_code)]
+    type Float = f64;
+    #[allow(dead_code)]
+    type Int = i64;
+    #[allow(dead_code)]
+    type ID = String;
+    type URI = super::URI;
+    pub struct Variables {
+        pub owner: String,
+        pub name: String,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for Variables {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "Variables",
+                    false as usize + 1 + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "owner",
+                    &self.owner,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "name",
+                    &self.name,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    impl Variables {}
+    pub struct ResponseData {
+        pub repository: Option<RepoViewRepository>,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for ResponseData {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "repository" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"repository" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<ResponseData>,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = ResponseData;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct ResponseData",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            Option<RepoViewRepository>,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct ResponseData with 1 element",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(ResponseData {
+                            repository: __field0,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<
+                            Option<RepoViewRepository>,
+                        > = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "repository",
+                                            ),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            Option<RepoViewRepository>,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("repository")?
+                            }
+                        };
+                        _serde::__private::Ok(ResponseData {
+                            repository: __field0,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["repository"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "ResponseData",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<ResponseData>,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for ResponseData {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field1_finish(
+                f,
+                "ResponseData",
+                "repository",
+                &&self.repository,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for ResponseData {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "ResponseData",
+                    false as usize + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "repository",
+                    &self.repository,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepository {
+        #[serde(rename = "homepageUrl")]
+        pub homepage_url: Option<URI>,
+        pub stargazers: RepoViewRepositoryStargazers,
+        pub issues: RepoViewRepositoryIssues,
+        #[serde(rename = "pullRequests")]
+        pub pull_requests: RepoViewRepositoryPullRequests,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for RepoViewRepository {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __field1,
+                    __field2,
+                    __field3,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            1u64 => _serde::__private::Ok(__Field::__field1),
+                            2u64 => _serde::__private::Ok(__Field::__field2),
+                            3u64 => _serde::__private::Ok(__Field::__field3),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "homepageUrl" => _serde::__private::Ok(__Field::__field0),
+                            "stargazers" => _serde::__private::Ok(__Field::__field1),
+                            "issues" => _serde::__private::Ok(__Field::__field2),
+                            "pullRequests" => _serde::__private::Ok(__Field::__field3),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"homepageUrl" => _serde::__private::Ok(__Field::__field0),
+                            b"stargazers" => _serde::__private::Ok(__Field::__field1),
+                            b"issues" => _serde::__private::Ok(__Field::__field2),
+                            b"pullRequests" => _serde::__private::Ok(__Field::__field3),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<RepoViewRepository>,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepository;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepository",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            Option<URI>,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepository with 4 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        let __field1 = match _serde::de::SeqAccess::next_element::<
+                            RepoViewRepositoryStargazers,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        1usize,
+                                        &"struct RepoViewRepository with 4 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        let __field2 = match _serde::de::SeqAccess::next_element::<
+                            RepoViewRepositoryIssues,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        2usize,
+                                        &"struct RepoViewRepository with 4 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        let __field3 = match _serde::de::SeqAccess::next_element::<
+                            RepoViewRepositoryPullRequests,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        3usize,
+                                        &"struct RepoViewRepository with 4 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepository {
+                            homepage_url: __field0,
+                            stargazers: __field1,
+                            issues: __field2,
+                            pull_requests: __field3,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<Option<URI>> = _serde::__private::None;
+                        let mut __field1: _serde::__private::Option<
+                            RepoViewRepositoryStargazers,
+                        > = _serde::__private::None;
+                        let mut __field2: _serde::__private::Option<
+                            RepoViewRepositoryIssues,
+                        > = _serde::__private::None;
+                        let mut __field3: _serde::__private::Option<
+                            RepoViewRepositoryPullRequests,
+                        > = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "homepageUrl",
+                                            ),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            Option<URI>,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                __Field::__field1 => {
+                                    if _serde::__private::Option::is_some(&__field1) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "stargazers",
+                                            ),
+                                        );
+                                    }
+                                    __field1 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            RepoViewRepositoryStargazers,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                __Field::__field2 => {
+                                    if _serde::__private::Option::is_some(&__field2) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field("issues"),
+                                        );
+                                    }
+                                    __field2 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            RepoViewRepositoryIssues,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                __Field::__field3 => {
+                                    if _serde::__private::Option::is_some(&__field3) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "pullRequests",
+                                            ),
+                                        );
+                                    }
+                                    __field3 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            RepoViewRepositoryPullRequests,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("homepageUrl")?
+                            }
+                        };
+                        let __field1 = match __field1 {
+                            _serde::__private::Some(__field1) => __field1,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("stargazers")?
+                            }
+                        };
+                        let __field2 = match __field2 {
+                            _serde::__private::Some(__field2) => __field2,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("issues")?
+                            }
+                        };
+                        let __field3 = match __field3 {
+                            _serde::__private::Some(__field3) => __field3,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("pullRequests")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepository {
+                            homepage_url: __field0,
+                            stargazers: __field1,
+                            issues: __field2,
+                            pull_requests: __field3,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &[
+                    "homepageUrl",
+                    "stargazers",
+                    "issues",
+                    "pullRequests",
+                ];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepository",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<RepoViewRepository>,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepository {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field4_finish(
+                f,
+                "RepoViewRepository",
+                "homepage_url",
+                &self.homepage_url,
+                "stargazers",
+                &self.stargazers,
+                "issues",
+                &self.issues,
+                "pull_requests",
+                &&self.pull_requests,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepository {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepository",
+                    false as usize + 1 + 1 + 1 + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "homepageUrl",
+                    &self.homepage_url,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "stargazers",
+                    &self.stargazers,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "issues",
+                    &self.issues,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "pullRequests",
+                    &self.pull_requests,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepositoryStargazers {
+        #[serde(rename = "totalCount")]
+        pub total_count: Int,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for RepoViewRepositoryStargazers {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "totalCount" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"totalCount" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<RepoViewRepositoryStargazers>,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepositoryStargazers;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepositoryStargazers",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            Int,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepositoryStargazers with 1 element",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryStargazers {
+                            total_count: __field0,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<Int> = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "totalCount",
+                                            ),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<Int>(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("totalCount")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryStargazers {
+                            total_count: __field0,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["totalCount"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepositoryStargazers",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<
+                            RepoViewRepositoryStargazers,
+                        >,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepositoryStargazers {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field1_finish(
+                f,
+                "RepoViewRepositoryStargazers",
+                "total_count",
+                &&self.total_count,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepositoryStargazers {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepositoryStargazers",
+                    false as usize + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "totalCount",
+                    &self.total_count,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepositoryIssues {
+        pub nodes: Option<Vec<Option<RepoViewRepositoryIssuesNodes>>>,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for RepoViewRepositoryIssues {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "nodes" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"nodes" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<RepoViewRepositoryIssues>,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepositoryIssues;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepositoryIssues",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            Option<Vec<Option<RepoViewRepositoryIssuesNodes>>>,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepositoryIssues with 1 element",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryIssues {
+                            nodes: __field0,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<
+                            Option<Vec<Option<RepoViewRepositoryIssuesNodes>>>,
+                        > = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field("nodes"),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            Option<Vec<Option<RepoViewRepositoryIssuesNodes>>>,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("nodes")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryIssues {
+                            nodes: __field0,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["nodes"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepositoryIssues",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<
+                            RepoViewRepositoryIssues,
+                        >,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepositoryIssues {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field1_finish(
+                f,
+                "RepoViewRepositoryIssues",
+                "nodes",
+                &&self.nodes,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepositoryIssues {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepositoryIssues",
+                    false as usize + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "nodes",
+                    &self.nodes,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepositoryIssuesNodes {
+        pub title: String,
+        pub comments: RepoViewRepositoryIssuesNodesComments,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for RepoViewRepositoryIssuesNodes {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __field1,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            1u64 => _serde::__private::Ok(__Field::__field1),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "title" => _serde::__private::Ok(__Field::__field0),
+                            "comments" => _serde::__private::Ok(__Field::__field1),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"title" => _serde::__private::Ok(__Field::__field0),
+                            b"comments" => _serde::__private::Ok(__Field::__field1),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<
+                        RepoViewRepositoryIssuesNodes,
+                    >,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepositoryIssuesNodes;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepositoryIssuesNodes",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            String,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepositoryIssuesNodes with 2 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        let __field1 = match _serde::de::SeqAccess::next_element::<
+                            RepoViewRepositoryIssuesNodesComments,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        1usize,
+                                        &"struct RepoViewRepositoryIssuesNodes with 2 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryIssuesNodes {
+                            title: __field0,
+                            comments: __field1,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<String> = _serde::__private::None;
+                        let mut __field1: _serde::__private::Option<
+                            RepoViewRepositoryIssuesNodesComments,
+                        > = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field("title"),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<String>(&mut __map)?,
+                                    );
+                                }
+                                __Field::__field1 => {
+                                    if _serde::__private::Option::is_some(&__field1) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "comments",
+                                            ),
+                                        );
+                                    }
+                                    __field1 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            RepoViewRepositoryIssuesNodesComments,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("title")?
+                            }
+                        };
+                        let __field1 = match __field1 {
+                            _serde::__private::Some(__field1) => __field1,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("comments")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryIssuesNodes {
+                            title: __field0,
+                            comments: __field1,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["title", "comments"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepositoryIssuesNodes",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<
+                            RepoViewRepositoryIssuesNodes,
+                        >,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepositoryIssuesNodes {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field2_finish(
+                f,
+                "RepoViewRepositoryIssuesNodes",
+                "title",
+                &self.title,
+                "comments",
+                &&self.comments,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepositoryIssuesNodes {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepositoryIssuesNodes",
+                    false as usize + 1 + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "title",
+                    &self.title,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "comments",
+                    &self.comments,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepositoryIssuesNodesComments {
+        #[serde(rename = "totalCount")]
+        pub total_count: Int,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for RepoViewRepositoryIssuesNodesComments {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "totalCount" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"totalCount" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<
+                        RepoViewRepositoryIssuesNodesComments,
+                    >,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepositoryIssuesNodesComments;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepositoryIssuesNodesComments",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            Int,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepositoryIssuesNodesComments with 1 element",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryIssuesNodesComments {
+                            total_count: __field0,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<Int> = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "totalCount",
+                                            ),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<Int>(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("totalCount")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryIssuesNodesComments {
+                            total_count: __field0,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["totalCount"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepositoryIssuesNodesComments",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<
+                            RepoViewRepositoryIssuesNodesComments,
+                        >,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepositoryIssuesNodesComments {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field1_finish(
+                f,
+                "RepoViewRepositoryIssuesNodesComments",
+                "total_count",
+                &&self.total_count,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepositoryIssuesNodesComments {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepositoryIssuesNodesComments",
+                    false as usize + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "totalCount",
+                    &self.total_count,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepositoryPullRequests {
+        pub nodes: Option<Vec<Option<RepoViewRepositoryPullRequestsNodes>>>,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for RepoViewRepositoryPullRequests {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "nodes" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"nodes" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<
+                        RepoViewRepositoryPullRequests,
+                    >,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepositoryPullRequests;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepositoryPullRequests",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            Option<Vec<Option<RepoViewRepositoryPullRequestsNodes>>>,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepositoryPullRequests with 1 element",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryPullRequests {
+                            nodes: __field0,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<
+                            Option<Vec<Option<RepoViewRepositoryPullRequestsNodes>>>,
+                        > = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field("nodes"),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            Option<Vec<Option<RepoViewRepositoryPullRequestsNodes>>>,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("nodes")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryPullRequests {
+                            nodes: __field0,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["nodes"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepositoryPullRequests",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<
+                            RepoViewRepositoryPullRequests,
+                        >,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepositoryPullRequests {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field1_finish(
+                f,
+                "RepoViewRepositoryPullRequests",
+                "nodes",
+                &&self.nodes,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepositoryPullRequests {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepositoryPullRequests",
+                    false as usize + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "nodes",
+                    &self.nodes,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepositoryPullRequestsNodes {
+        pub title: String,
+        pub commits: RepoViewRepositoryPullRequestsNodesCommits,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de> for RepoViewRepositoryPullRequestsNodes {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __field1,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            1u64 => _serde::__private::Ok(__Field::__field1),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "title" => _serde::__private::Ok(__Field::__field0),
+                            "commits" => _serde::__private::Ok(__Field::__field1),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"title" => _serde::__private::Ok(__Field::__field0),
+                            b"commits" => _serde::__private::Ok(__Field::__field1),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<
+                        RepoViewRepositoryPullRequestsNodes,
+                    >,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepositoryPullRequestsNodes;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepositoryPullRequestsNodes",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            String,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepositoryPullRequestsNodes with 2 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        let __field1 = match _serde::de::SeqAccess::next_element::<
+                            RepoViewRepositoryPullRequestsNodesCommits,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        1usize,
+                                        &"struct RepoViewRepositoryPullRequestsNodes with 2 elements",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryPullRequestsNodes {
+                            title: __field0,
+                            commits: __field1,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<String> = _serde::__private::None;
+                        let mut __field1: _serde::__private::Option<
+                            RepoViewRepositoryPullRequestsNodesCommits,
+                        > = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field("title"),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<String>(&mut __map)?,
+                                    );
+                                }
+                                __Field::__field1 => {
+                                    if _serde::__private::Option::is_some(&__field1) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "commits",
+                                            ),
+                                        );
+                                    }
+                                    __field1 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<
+                                            RepoViewRepositoryPullRequestsNodesCommits,
+                                        >(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("title")?
+                            }
+                        };
+                        let __field1 = match __field1 {
+                            _serde::__private::Some(__field1) => __field1,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("commits")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryPullRequestsNodes {
+                            title: __field0,
+                            commits: __field1,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["title", "commits"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepositoryPullRequestsNodes",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<
+                            RepoViewRepositoryPullRequestsNodes,
+                        >,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepositoryPullRequestsNodes {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field2_finish(
+                f,
+                "RepoViewRepositoryPullRequestsNodes",
+                "title",
+                &self.title,
+                "commits",
+                &&self.commits,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepositoryPullRequestsNodes {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepositoryPullRequestsNodes",
+                    false as usize + 1 + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "title",
+                    &self.title,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "commits",
+                    &self.commits,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+    pub struct RepoViewRepositoryPullRequestsNodesCommits {
+        #[serde(rename = "totalCount")]
+        pub total_count: Int,
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl<'de> _serde::Deserialize<'de>
+        for RepoViewRepositoryPullRequestsNodesCommits {
+            fn deserialize<__D>(
+                __deserializer: __D,
+            ) -> _serde::__private::Result<Self, __D::Error>
+            where
+                __D: _serde::Deserializer<'de>,
+            {
+                #[allow(non_camel_case_types)]
+                #[doc(hidden)]
+                enum __Field {
+                    __field0,
+                    __ignore,
+                }
+                #[doc(hidden)]
+                struct __FieldVisitor;
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                    type Value = __Field;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "field identifier",
+                        )
+                    }
+                    fn visit_u64<__E>(
+                        self,
+                        __value: u64,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            0u64 => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_str<__E>(
+                        self,
+                        __value: &str,
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            "totalCount" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                    fn visit_bytes<__E>(
+                        self,
+                        __value: &[u8],
+                    ) -> _serde::__private::Result<Self::Value, __E>
+                    where
+                        __E: _serde::de::Error,
+                    {
+                        match __value {
+                            b"totalCount" => _serde::__private::Ok(__Field::__field0),
+                            _ => _serde::__private::Ok(__Field::__ignore),
+                        }
+                    }
+                }
+                #[automatically_derived]
+                impl<'de> _serde::Deserialize<'de> for __Field {
+                    #[inline]
+                    fn deserialize<__D>(
+                        __deserializer: __D,
+                    ) -> _serde::__private::Result<Self, __D::Error>
+                    where
+                        __D: _serde::Deserializer<'de>,
+                    {
+                        _serde::Deserializer::deserialize_identifier(
+                            __deserializer,
+                            __FieldVisitor,
+                        )
+                    }
+                }
+                #[doc(hidden)]
+                struct __Visitor<'de> {
+                    marker: _serde::__private::PhantomData<
+                        RepoViewRepositoryPullRequestsNodesCommits,
+                    >,
+                    lifetime: _serde::__private::PhantomData<&'de ()>,
+                }
+                #[automatically_derived]
+                impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                    type Value = RepoViewRepositoryPullRequestsNodesCommits;
+                    fn expecting(
+                        &self,
+                        __formatter: &mut _serde::__private::Formatter,
+                    ) -> _serde::__private::fmt::Result {
+                        _serde::__private::Formatter::write_str(
+                            __formatter,
+                            "struct RepoViewRepositoryPullRequestsNodesCommits",
+                        )
+                    }
+                    #[inline]
+                    fn visit_seq<__A>(
+                        self,
+                        mut __seq: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::SeqAccess<'de>,
+                    {
+                        let __field0 = match _serde::de::SeqAccess::next_element::<
+                            Int,
+                        >(&mut __seq)? {
+                            _serde::__private::Some(__value) => __value,
+                            _serde::__private::None => {
+                                return _serde::__private::Err(
+                                    _serde::de::Error::invalid_length(
+                                        0usize,
+                                        &"struct RepoViewRepositoryPullRequestsNodesCommits with 1 element",
+                                    ),
+                                );
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryPullRequestsNodesCommits {
+                            total_count: __field0,
+                        })
+                    }
+                    #[inline]
+                    fn visit_map<__A>(
+                        self,
+                        mut __map: __A,
+                    ) -> _serde::__private::Result<Self::Value, __A::Error>
+                    where
+                        __A: _serde::de::MapAccess<'de>,
+                    {
+                        let mut __field0: _serde::__private::Option<Int> = _serde::__private::None;
+                        while let _serde::__private::Some(__key) = _serde::de::MapAccess::next_key::<
+                            __Field,
+                        >(&mut __map)? {
+                            match __key {
+                                __Field::__field0 => {
+                                    if _serde::__private::Option::is_some(&__field0) {
+                                        return _serde::__private::Err(
+                                            <__A::Error as _serde::de::Error>::duplicate_field(
+                                                "totalCount",
+                                            ),
+                                        );
+                                    }
+                                    __field0 = _serde::__private::Some(
+                                        _serde::de::MapAccess::next_value::<Int>(&mut __map)?,
+                                    );
+                                }
+                                _ => {
+                                    let _ = _serde::de::MapAccess::next_value::<
+                                        _serde::de::IgnoredAny,
+                                    >(&mut __map)?;
+                                }
+                            }
+                        }
+                        let __field0 = match __field0 {
+                            _serde::__private::Some(__field0) => __field0,
+                            _serde::__private::None => {
+                                _serde::__private::de::missing_field("totalCount")?
+                            }
+                        };
+                        _serde::__private::Ok(RepoViewRepositoryPullRequestsNodesCommits {
+                            total_count: __field0,
+                        })
+                    }
+                }
+                #[doc(hidden)]
+                const FIELDS: &'static [&'static str] = &["totalCount"];
+                _serde::Deserializer::deserialize_struct(
+                    __deserializer,
+                    "RepoViewRepositoryPullRequestsNodesCommits",
+                    FIELDS,
+                    __Visitor {
+                        marker: _serde::__private::PhantomData::<
+                            RepoViewRepositoryPullRequestsNodesCommits,
+                        >,
+                        lifetime: _serde::__private::PhantomData,
+                    },
+                )
+            }
+        }
+    };
+    #[automatically_derived]
+    impl ::core::fmt::Debug for RepoViewRepositoryPullRequestsNodesCommits {
+        #[inline]
+        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            ::core::fmt::Formatter::debug_struct_field1_finish(
+                f,
+                "RepoViewRepositoryPullRequestsNodesCommits",
+                "total_count",
+                &&self.total_count,
+            )
+        }
+    }
+    #[doc(hidden)]
+    #[allow(
+        non_upper_case_globals,
+        unused_attributes,
+        unused_qualifications,
+        clippy::absolute_paths,
+    )]
+    const _: () = {
+        #[allow(unused_extern_crates, clippy::useless_attribute)]
+        extern crate serde as _serde;
+        #[automatically_derived]
+        impl _serde::Serialize for RepoViewRepositoryPullRequestsNodesCommits {
+            fn serialize<__S>(
+                &self,
+                __serializer: __S,
+            ) -> _serde::__private::Result<__S::Ok, __S::Error>
+            where
+                __S: _serde::Serializer,
+            {
+                let mut __serde_state = _serde::Serializer::serialize_struct(
+                    __serializer,
+                    "RepoViewRepositoryPullRequestsNodesCommits",
+                    false as usize + 1,
+                )?;
+                _serde::ser::SerializeStruct::serialize_field(
+                    &mut __serde_state,
+                    "totalCount",
+                    &self.total_count,
+                )?;
+                _serde::ser::SerializeStruct::end(__serde_state)
+            }
+        }
+    };
+}
+impl graphql_client::GraphQLQuery for RepoView {
+    type Variables = repo_view::Variables;
+    type ResponseData = repo_view::ResponseData;
+    fn build_query(
+        variables: Self::Variables,
+    ) -> ::graphql_client::QueryBody<Self::Variables> {
+        graphql_client::QueryBody {
+            variables,
+            query: repo_view::QUERY,
+            operation_name: repo_view::OPERATION_NAME,
+        }
+    }
+}
+fn gh_token() -> &'static str {
+    GH_TOKEN.get_or_init(|| std::env::var("GH_TOKEN").unwrap())
+}
+fn main() -> Result<(), Whatever> {
+    let client = Client::builder()
+        .user_agent("graphql-rust/0.1.0")
+        .default_headers(
+            std::iter::once((
+                    reqwest::header::AUTHORIZATION,
+                    reqwest::header::HeaderValue::from_str(
+                            &::alloc::__export::must_use({
+                                ::alloc::fmt::format(format_args!("Bearer {0}", gh_token()))
+                            }),
+                        )
+                        .unwrap(),
+                ))
+                .collect(),
+        )
+        .build()
+        .whatever_context("client build")?;
+    let variables = repo_view::Variables {
+        owner: "facebook".to_string(),
+        name: "rocksdb".to_string(),
+    };
+    let response_body = post_graphql_blocking::<
+        RepoView,
+        _,
+    >(&client, "https://api.github.com/graphql", variables)
+        .unwrap();
+    match &response_body {
+        tmp => {
+            {
+                ::std::io::_eprint(
+                    format_args!(
+                        "[{0}:{1}:{2}] {3} = {4:#?}\n",
+                        "src/main.rs",
+                        45u32,
+                        5u32,
+                        "&response_body",
+                        &&tmp as &dyn ::std::fmt::Debug,
+                    ),
+                );
+            };
+            tmp
+        }
+    };
+    let response_data: repo_view::ResponseData = response_body
+        .data
+        .expect("missing response data");
+    let stars: Option<i64> = response_data
+        .repository
+        .as_ref()
+        .map(|repo| repo.stargazers.total_count);
+    let mut table = prettytable::Table::new();
+    table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    table
+        .set_titles(
+            ::prettytable::Row::new(
+                <[_]>::into_vec(
+                    ::alloc::boxed::box_new([
+                        ::prettytable::Cell::new(&"issue".to_string()).style_spec("b"),
+                        ::prettytable::Cell::new(&"comments".to_string()).style_spec("b"),
+                    ]),
+                ),
+            ),
+        );
+    for issue in response_data
+        .repository
+        .expect("missing repository")
+        .issues
+        .nodes
+        .expect("issue nodes is null")
+        .iter()
+        .flatten()
+    {
+        table
+            .add_row(
+                ::prettytable::Row::new(
+                    <[_]>::into_vec(
+                        ::alloc::boxed::box_new([
+                            ::prettytable::Cell::new(&issue.title.to_string()),
+                            ::prettytable::Cell::new(
+                                &issue.comments.total_count.to_string(),
+                            ),
+                        ]),
+                    ),
+                ),
+            );
+    }
+    table.printstd();
+    Ok(())
+}
